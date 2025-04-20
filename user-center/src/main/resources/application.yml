@@ -11,3 +11,7 @@ spring:
     url: jdbc:mysql://192.168.83.123:3306/my-user-center
   application:
     name: user-center
+#数据库字段设置的就是驼峰，我们不需要mybatisplus帮我们转驼峰，它会把我们存的对象转下划线的。
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false
