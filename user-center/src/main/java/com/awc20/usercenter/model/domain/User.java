@@ -9,7 +9,8 @@ import lombok.Setter;
 
 /**
  * 用户表
- * @TableName user
+ *
+ * @author grey
  */
 @TableName(value ="user")
 @Data

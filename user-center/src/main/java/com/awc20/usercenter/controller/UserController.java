@@ -1,17 +1,17 @@
 package com.awc20.usercenter.controller;
 
+import com.awc20.usercenter.mapper.UserMapper;
 import com.awc20.usercenter.mapper.dto.UserLoginDto;
 import com.awc20.usercenter.mapper.dto.UserRegisterDto;
 import com.awc20.usercenter.model.domain.User;
 import com.awc20.usercenter.service.UserService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 用户接口
@@ -45,4 +45,25 @@ public class UserController {
         }
         return userService.userLogin(userAccount, userPassword,request);
     }
+
+
+    @GetMapping("/search")
+    public List<User> searchUser(String username){
+        QueryWrapper<User> queryWrapper=new QueryWrapper<>();
+        if (StringUtils.isNotBlank(username)){
+            queryWrapper.like("username",username);
+        }
+        return userService.list(queryWrapper);
+    }
+
+    @PostMapping("/delete")
+    public boolean deleteUser(@RequestBody Long id){
+        if (id==null || id<0){
+            return false;
+        }
+        return userService.removeById(id);
+    }
+
+
+
 }
