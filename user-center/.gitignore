@@ -23,7 +23,6 @@ out
 gen
 *.class
 
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

@@ -1,6 +1,6 @@
 package com.awc20.usercenter.service.impl;
-import java.util.Date;
 
+import com.awc20.usercenter.constant.UserConstant;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.awc20.usercenter.model.domain.User;
@@ -34,10 +34,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     private static final String SALT="grey";
 
-    /**
-     *     用户登录态key(session里的key)
-     */
-    private static final String USER_LOGIN_STATE="userLoginState";
+
     /**
      * 用户注册
      * @param userAccount  用户账户
@@ -132,18 +129,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         //3.用户信息(脱敏)
-        User safetyUser = new User();
-        safetyUser.setId(user.getId());
-        safetyUser.setUsername(user.getUsername());
-        safetyUser.setUserAccount(user.getUserAccount());
-        safetyUser.setAvatarUrl(user.getAvatarUrl());
-        safetyUser.setGender(user.getGender());
-        safetyUser.setPhone(user.getPhone());
-        safetyUser.setEmail(user.getEmail());
-        safetyUser.setCreateTime(user.getCreateTime());
-
+        User safetyUser = getSafetyUser(user);
         //4. 登录成功，记录用户登录态,返回用户脱敏信息
-        request.getSession().setAttribute(USER_LOGIN_STATE,safetyUser);
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE,safetyUser);
+        return safetyUser;
+    }
+
+    @Override
+    public User getSafetyUser(User originUser){
+        User safetyUser = new User();
+        safetyUser.setId(originUser.getId());
+        safetyUser.setUsername(originUser.getUsername());
+        safetyUser.setUserAccount(originUser.getUserAccount());
+        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
+        safetyUser.setGender(originUser.getGender());
+        safetyUser.setPhone(originUser.getPhone());
+        safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setUserRole(originUser.getUserRole());
+        safetyUser.setCreateTime(originUser.getCreateTime());
         return safetyUser;
     }
 }

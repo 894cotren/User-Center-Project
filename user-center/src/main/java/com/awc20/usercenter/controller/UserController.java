@@ -1,5 +1,6 @@
 package com.awc20.usercenter.controller;
 
+import com.awc20.usercenter.constant.UserConstant;
 import com.awc20.usercenter.mapper.UserMapper;
 import com.awc20.usercenter.mapper.dto.UserLoginDto;
 import com.awc20.usercenter.mapper.dto.UserRegisterDto;
@@ -11,7 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户接口
@@ -48,22 +51,48 @@ public class UserController {
 
 
     @GetMapping("/search")
-    public List<User> searchUser(String username){
+    public List<User> searchUser(String username,HttpServletRequest request){
+        //管理员鉴权
+        if (!isAdmin(request)){
+            return new ArrayList<>();
+        }
         QueryWrapper<User> queryWrapper=new QueryWrapper<>();
         if (StringUtils.isNotBlank(username)){
             queryWrapper.like("username",username);
         }
-        return userService.list(queryWrapper);
+        //用户数据脱敏
+
+        List<User> userList = userService.list(queryWrapper);
+        return userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
     }
 
     @PostMapping("/delete")
-    public boolean deleteUser(@RequestBody Long id){
+    public boolean deleteUser(@RequestBody Long id,HttpServletRequest request){
+        //管理员鉴权
+        if (!isAdmin(request)){
+            return false;
+        }
+        //id非空验证
         if (id==null || id<0){
             return false;
         }
         return userService.removeById(id);
     }
 
+    /**
+     * 通过本地session里获取到当前用户进行鉴权
+     * @param request 请求体
+     * @return
+     */
+    private boolean isAdmin(HttpServletRequest request){
+        //鉴权  只有管理员能查询
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User curUser=(User)userObj;
+        if (curUser==null||!curUser.getUserRole().equals(UserConstant.ADMIN_ROLE)){
+            return false;
+        }
+        return true;
+    }
 
 
 }

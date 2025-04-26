@@ -1,7 +1,9 @@
 server:
   port: 8080
-
-
+  #session 失效时长   86400s=1day
+  reactive:
+    session:
+      timeout: 86400
 # DataSource Config
 spring:
   datasource:
