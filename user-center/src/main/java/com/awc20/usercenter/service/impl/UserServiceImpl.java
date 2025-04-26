@@ -1,6 +1,8 @@
 package com.awc20.usercenter.service.impl;
 
+import com.awc20.usercenter.common.ErrorCodeEnum;
 import com.awc20.usercenter.constant.UserConstant;
+import com.awc20.usercenter.exception.BusinessException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.awc20.usercenter.model.domain.User;
@@ -37,37 +39,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     /**
      * 用户注册
-     * @param userAccount  用户账户
+     *
+     * @param userAccount   用户账户
      * @param userPassword  用户密码
      * @param checkPassword 用户校验密码（二次校验）
+     * @param planetCode
      * @return 返回新用户id   或者 -1验证码报错（暂时）
      */
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         //1.进行校验
         //非空
-        if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)){
-            //todo 修改为自定义异常
-            return -1;
+        if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword,planetCode)){
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"参数不能为空");
         }
         //账户长度必须大于4位
         if (userAccount.length()<4){
-            return -1;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"账户长度必须大于4位");
         }
         //账户密码不能小于8位
         if(userPassword.length()<8 || checkPassword.length()<8){
-            return -1;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"账户密码不能小于8位");
         }
 
         //账号字符校验
         String accountPattern = "^[a-zA-Z0-9_]+$";
         Matcher matcher = Pattern.compile(accountPattern).matcher(userAccount);
         if (!matcher.find()){
-            return -1;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"账号不能包含特殊符号");
         }
         //密码和校验密码一样
         if (!userPassword.equals(checkPassword)){
-            return -1;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"两次密码不一致");
+        }
+
+        //校验星球编号不能大于5
+        if (planetCode.length()>5){
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"星球编号不能大于5");
         }
 
         //账户不能重复
@@ -75,7 +83,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("userAccount",userAccount);
         long count = userMapper.selectCount(queryWrapper);
         if(count>0){
-            return -1;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"账户已存在");
+        }
+
+        //星球编号不能重复
+        queryWrapper=new QueryWrapper<>();
+        queryWrapper.eq("planetCode",planetCode);
+        count = userMapper.selectCount(queryWrapper);
+        if(count>0){
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"星球编号已存在");
         }
 
         //2.密码加密
@@ -85,9 +101,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
+        user.setPlanetCode(planetCode);
         int insertFlag = userMapper.insert(user);
         if (insertFlag==0){
-            return -1;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"用户注册时新增失败");
         }
         return user.getId();
     }
@@ -97,23 +114,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1. 校验用户账户密码是否合法
         //非空
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
-            //todo 修改为自定义异常
-            return null;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"参数不能为空");
         }
         //账户长度不小于4
         if(userAccount.length()<4){
-            return null;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"账户长度不小于4");
         }
 
         //密码不小于8
         if(userPassword.length()<8){
-            return null;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"密码长度不小于8");
         }
         //账户不包含特殊字符
         String accountPattern = "^[a-zA-Z0-9_]+$";
         Matcher matcher = Pattern.compile(accountPattern).matcher(userAccount);
         if (!matcher.find()){
-            return null;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"账户不能包含特殊字符");
         }
         //2. 查询用户，校验密码
         //密码加密
@@ -125,7 +141,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (user==null) {
             //用户不存在或者密码错误
             log.info("user login failed ,userAccount cannot match userPassword");
-            return null;
+            throw new BusinessException(ErrorCodeEnum.PARAMS_ERROR,"用户不存在或者密码错误");
         }
 
         //3.用户信息(脱敏)
@@ -137,6 +153,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public User getSafetyUser(User originUser){
+        //如果为空，直接返回空
+        if (originUser==null){
+            return null;
+        }
+
         User safetyUser = new User();
         safetyUser.setId(originUser.getId());
         safetyUser.setUsername(originUser.getUsername());
@@ -145,9 +166,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setGender(originUser.getGender());
         safetyUser.setPhone(originUser.getPhone());
         safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setPlanetCode(originUser.getPlanetCode());
         safetyUser.setUserRole(originUser.getUserRole());
         safetyUser.setCreateTime(originUser.getCreateTime());
         return safetyUser;
+    }
+
+    /**
+     * 用户注销
+     * @param request
+     * @return  不明白为什么鱼皮要返回1
+     */
+    @Override
+    public int userLogout(HttpServletRequest request) {
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        return 1;
     }
 }
 
