@@ -169,6 +169,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setPlanetCode(originUser.getPlanetCode());
         safetyUser.setUserRole(originUser.getUserRole());
         safetyUser.setCreateTime(originUser.getCreateTime());
+        //safetyUser.setUpdateTime(originUser.getUpdateTime());
         return safetyUser;
     }
 

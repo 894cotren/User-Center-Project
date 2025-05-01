@@ -4,6 +4,8 @@ server:
   reactive:
     session:
       timeout: 86400
+  servlet:
+    context-path: /api
 # DataSource Config
 spring:
   datasource:
