@@ -1,0 +1,7 @@
+# DataSource Config
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 23321212
+    url: jdbc:mysql://192.168.83.123:3306/my-user-center
