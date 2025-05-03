@@ -12,10 +12,9 @@ spring:
     name: user-center
   profiles:
     active: dev
-#数据库字段设置的就是驼峰，我们不需要mybatisplus帮我们转驼峰，它会把我们存的对象转下划线的。
 mybatis-plus:
   configuration:
-    map-underscore-to-camel-case: false
+    map-underscore-to-camel-case: true
     #开启sql查询日志
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
