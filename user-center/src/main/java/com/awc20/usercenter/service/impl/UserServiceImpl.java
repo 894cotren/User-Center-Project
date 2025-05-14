@@ -3,6 +3,7 @@ package com.awc20.usercenter.service.impl;
 import com.awc20.usercenter.common.ErrorCodeEnum;
 import com.awc20.usercenter.constant.UserConstant;
 import com.awc20.usercenter.exception.BusinessException;
+import com.awc20.usercenter.model.vo.UserVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.awc20.usercenter.model.domain.User;
@@ -10,6 +11,7 @@ import com.awc20.usercenter.service.UserService;
 import com.awc20.usercenter.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -115,7 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public UserVo userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         //1. 校验用户账户密码是否合法
         //非空
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
@@ -150,20 +152,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         //3.用户信息(脱敏)
-        User safetyUser = getSafetyUser(user);
+        UserVo safetyUser = getSafetyUser(user);
         //4. 登录成功，记录用户登录态,返回用户脱敏信息
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, safetyUser);
         return safetyUser;
     }
 
     @Override
-    public User getSafetyUser(User originUser) {
+    public UserVo getSafetyUser(User originUser) {
         //如果为空，直接返回空
         if (originUser == null) {
             return null;
         }
-
-        User safetyUser = new User();
+        UserVo userVo = new UserVo();
+        BeanUtils.copyProperties(originUser,userVo);
+/*        User safetyUser = new User();
         safetyUser.setId(originUser.getId());
         safetyUser.setUsername(originUser.getUsername());
         safetyUser.setUserAccount(originUser.getUserAccount());
@@ -173,9 +176,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setEmail(originUser.getEmail());
         safetyUser.setPlanetCode(originUser.getPlanetCode());
         safetyUser.setUserRole(originUser.getUserRole());
-        safetyUser.setCreateTime(originUser.getCreateTime());
+        safetyUser.setCreateTime(originUser.getCreateTime());*/
         //safetyUser.setUpdateTime(originUser.getUpdateTime());
-        return safetyUser;
+        return userVo;
     }
 
     /**

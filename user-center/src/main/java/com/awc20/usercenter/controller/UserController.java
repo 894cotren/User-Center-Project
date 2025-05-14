@@ -6,6 +6,7 @@ import com.awc20.usercenter.constant.UserConstant;
 import com.awc20.usercenter.mapper.dto.UserLoginDto;
 import com.awc20.usercenter.mapper.dto.UserRegisterDto;
 import com.awc20.usercenter.model.domain.User;
+import com.awc20.usercenter.model.vo.UserVo;
 import com.awc20.usercenter.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -43,13 +44,13 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public Result<User> userLogin(@RequestBody UserLoginDto userLoginDto, HttpServletRequest request){
+    public Result<UserVo> userLogin(@RequestBody UserLoginDto userLoginDto, HttpServletRequest request){
         String userAccount = userLoginDto.getUserAccount();
         String userPassword = userLoginDto.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)){
             return Result.fail(ErrorCodeEnum.PARAMS_ERROR);
         }
-        User user = userService.userLogin(userAccount, userPassword, request);
+        UserVo user = userService.userLogin(userAccount, userPassword, request);
         return Result.success(user);
     }
 
@@ -64,7 +65,7 @@ public class UserController {
 
 
     @GetMapping("/search")
-    public Result<List<User>> searchUser(String username,HttpServletRequest request){
+    public Result<List<UserVo>> searchUser(String username,HttpServletRequest request){
         //管理员鉴权
         if (!isAdmin(request)){
             return Result.fail(ErrorCodeEnum.NOT_AUTH);
@@ -76,7 +77,7 @@ public class UserController {
         //用户数据脱敏
 
         List<User> userList = userService.list(queryWrapper);
-        List<User> users = userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+        List<UserVo> users = userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
         return Result.success(users);
     }
 
@@ -95,9 +96,9 @@ public class UserController {
     }
 
     @GetMapping("/current")
-    public Result<User> getCurrentUser(HttpServletRequest request){
+    public Result<UserVo> getCurrentUser(HttpServletRequest request){
         Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        User currentUser=(User)userObj;
+        UserVo currentUser=(UserVo)userObj;
         if (currentUser==null){
             //如果为空说明当前用户未登录
             return Result.fail(ErrorCodeEnum.NOT_LOGIN);
@@ -106,7 +107,7 @@ public class UserController {
         Long userId = currentUser.getId();
         User user = userService.getById(userId);
         //再返回脱敏后的用户数据
-        User safetyUser = userService.getSafetyUser(user);
+        UserVo safetyUser = userService.getSafetyUser(user);
         return Result.success(safetyUser);
     }
     /**
@@ -117,7 +118,7 @@ public class UserController {
     private boolean isAdmin(HttpServletRequest request){
         //鉴权  只有管理员能查询
         Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        User curUser=(User)userObj;
+        UserVo curUser=(UserVo)userObj;
         if (curUser==null||!curUser.getUserRole().equals(UserConstant.ADMIN_ROLE)){
             return false;
         }

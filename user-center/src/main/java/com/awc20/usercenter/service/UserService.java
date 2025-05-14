@@ -1,6 +1,7 @@
 package com.awc20.usercenter.service;
 
 import com.awc20.usercenter.model.domain.User;
+import com.awc20.usercenter.model.vo.UserVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,14 +31,15 @@ public interface UserService extends IService<User> {
      * @param request
      * @return 返回登录用户的对象
      */
-    User userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    UserVo userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
      * 获得脱敏后用户数据
+     *
      * @param originUser
      * @return
      */
-    User getSafetyUser(User originUser);
+    UserVo getSafetyUser(User originUser);
 
     /**
      * 用户注销接口
